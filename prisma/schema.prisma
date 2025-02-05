@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model User {
+    id           String @id @unique
+    emailAddress String @unique
+
+    firstName String?
+    lastName  String?
+    imageUrl  String?
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    userToProject UserToProject[]
+}
+
+model Project {
+    id String @id @unique @default(cuid())
+
+    name        String
+    githubUrl   String
+    description String?
+
+    createdAt DateTime  @default(now())
+    updatedAt DateTime  @updatedAt
+    deletedAt DateTime?
+
+    userToProject UserToProject[]
+    commits       Commit[]
+}
+
+model UserToProject {
+    id String @id @unique @default(cuid())
+
+    userId    String
+    projectId String
+
+    user    User    @relation(fields: [userId], references: [id])
+    project Project @relation(fields: [projectId], references: [id])
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([userId, projectId])
+}
+
+model Commit {
+    id String @id @unique @default(cuid())
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    projectId String
+    project   Project @relation(fields: [projectId], references: [id])
+
+    commitMessage      String
+    commitHash         String
+    commitAutherName   String
+    commitAuthorGithubUrl  String?
+    commitAutherAvator String
+    commitDate         DateTime
+    //ai summery
+    summary            String
+}
