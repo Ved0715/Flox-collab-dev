@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { createTRPCRouter, protectedProcedure } from "../trpc"
 import { pollCommits } from "@/lib/github"
+import { indexGithubRepo } from "@/lib/github-loader";
 
 export const projectRouter = createTRPCRouter({
     createProject: protectedProcedure
@@ -23,7 +24,14 @@ export const projectRouter = createTRPCRouter({
                         },
                     },
                 });
-                await pollCommits(project.id);
+                try {
+                    await indexGithubRepo(project.id, input.githubUrl, input.githubToken);
+                    await pollCommits(project.id);
+                    return project;
+                } catch (error) {
+                    console.error("Error processing project:", error);
+                    throw new Error("Failed to process project");
+                }
                 return project;
             } catch (error) {
                 console.error("Error creating project:", error);

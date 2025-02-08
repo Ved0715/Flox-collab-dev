@@ -2,12 +2,14 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    extensions = [vector]
 }
 
 model User {
@@ -35,8 +37,9 @@ model Project {
     updatedAt DateTime  @updatedAt
     deletedAt DateTime?
 
-    userToProject UserToProject[]
-    commits       Commit[]
+    userToProject      UserToProject[]
+    commits            Commit[]
+    SorceCodeEmbedding SorceCodeEmbedding[]
 }
 
 model UserToProject {
@@ -54,6 +57,19 @@ model UserToProject {
     @@unique([userId, projectId])
 }
 
+model SorceCodeEmbedding {
+    id String @id @default(cuid())
+
+    summaryEmbedding Unsupported("vector(768)")?
+    sorceCode        String
+    filename         String
+    summary          String
+
+    projectId String
+
+    project Project @relation(fields: [projectId], references: [id])
+}
+
 model Commit {
     id String @id @unique @default(cuid())
 
@@ -63,12 +79,12 @@ model Commit {
     projectId String
     project   Project @relation(fields: [projectId], references: [id])
 
-    commitMessage      String
-    commitHash         String
-    commitAutherName   String
-    commitAuthorGithubUrl  String?
-    commitAutherAvator String
-    commitDate         DateTime
+    commitMessage         String
+    commitHash            String
+    commitAutherName      String
+    commitAuthorGithubUrl String?
+    commitAutherAvator    String
+    commitDate            DateTime
     //ai summery
-    summary            String
+    summary               String
 }
